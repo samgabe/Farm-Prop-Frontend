@@ -1,8 +1,8 @@
 <template>
-  <section>
+  <section class="min-w-0">
     <header class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
       <div>
-        <h2 class="text-3xl font-bold text-zinc-800 md:text-4xl">Production Management</h2>
+        <h2 class="text-2xl font-bold text-zinc-800 md:text-3xl">Production Management</h2>
         <p class="mt-2 text-base text-[#7a7467]">Track daily production output</p>
       </div>
       <button v-if="canCreate" class="rounded-lg bg-farm-green px-5 py-3 font-semibold text-white" @click="openCreateModal">
@@ -12,9 +12,9 @@
 
     <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <article v-for="card in productionCards" :key="card.label" :class="[cardClass, toneClass(card.tone)]">
-        <p class="text-lg">{{ card.label }}</p>
-        <h3 class="my-2 text-4xl font-bold">{{ card.value }}</h3>
-        <small class="text-sm">{{ card.note }}</small>
+        <p class="text-sm font-semibold tracking-wide">{{ card.label }}</p>
+        <h3 class="my-2 break-words text-2xl font-bold leading-tight md:text-3xl">{{ card.value }}</h3>
+        <small class="block break-words text-xs">{{ card.note }}</small>
       </article>
     </div>
 
@@ -24,7 +24,33 @@
     </div>
 
     <h3 class="mb-3 mt-8 text-2xl font-bold text-zinc-800 md:text-3xl">Daily Production Log</h3>
-    <div class="overflow-x-auto rounded-lg border border-[#ddd8ce] bg-farm-panel shadow-sm">
+    <div class="grid gap-3 md:hidden">
+      <article v-if="!filteredRows.length" class="rounded-lg border border-[#ddd8ce] bg-farm-panel p-4 text-center text-[#7a7467]">
+        No production logs available.
+      </article>
+      <article v-for="row in filteredRows" :key="`mobile-${row.id}`" class="rounded-lg border border-[#ddd8ce] bg-farm-panel p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <p class="text-sm text-[#7a7467]">{{ row.date }}</p>
+            <h4 class="font-bold text-zinc-800">{{ row.total }}</h4>
+          </div>
+        </div>
+        <div class="mt-2 grid gap-1 text-sm text-zinc-700">
+          <p><span class="font-semibold">Milk:</span> {{ row.milk }}</p>
+          <p><span class="font-semibold">Eggs:</span> {{ row.eggs }}</p>
+          <p><span class="font-semibold">Wool:</span> {{ row.wool }}</p>
+        </div>
+        <div v-if="canEdit" class="mt-3 flex flex-wrap gap-2">
+          <button class="rounded-md border border-[#cec7b8] px-3 py-1 text-sm" @click="openEditModal(row)">Edit</button>
+          <button class="rounded-md border border-farm-red px-3 py-1 text-sm text-farm-red" @click="askDelete(row)">Delete</button>
+        </div>
+      </article>
+      <article class="rounded-lg border border-[#ddd8ce] bg-farm-gold p-4 font-bold text-zinc-800">
+        Weekly Total: {{ weeklyValue }}
+      </article>
+    </div>
+
+    <div class="hidden overflow-x-auto rounded-lg border border-[#ddd8ce] bg-farm-panel shadow-sm md:block">
       <table class="min-w-[860px] w-full border-collapse">
         <thead class="bg-farm-green text-white">
           <tr>
@@ -47,7 +73,7 @@
             <td class="px-4 py-3">{{ row.wool }}</td>
             <td class="px-4 py-3 font-bold">{{ row.total }}</td>
             <td v-if="canEdit" class="px-4 py-3 text-right">
-              <div class="inline-flex gap-2">
+              <div class="inline-flex flex-wrap justify-end gap-2">
                 <button class="rounded-md border border-[#cec7b8] px-3 py-1 text-sm" @click="openEditModal(row)">Edit</button>
                 <button class="rounded-md border border-farm-red px-3 py-1 text-sm text-farm-red" @click="askDelete(row)">Delete</button>
               </div>
@@ -65,7 +91,7 @@
       </table>
     </div>
 
-    <div class="mt-3 flex items-center justify-end gap-2">
+    <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
       <button class="rounded-md border border-[#cec7b8] px-3 py-1 text-sm disabled:opacity-40" :disabled="page <= 1" @click="loadData(page - 1)">Prev</button>
       <span class="text-sm text-[#6f6758]">Page {{ page }} / {{ totalPages }}</span>
       <button class="rounded-md border border-[#cec7b8] px-3 py-1 text-sm disabled:opacity-40" :disabled="page >= totalPages" @click="loadData(page + 1)">Next</button>
@@ -73,16 +99,55 @@
 
     <BaseModal :open="modalOpen" :title="modalMode === 'create' ? 'Add Production Log' : 'Edit Production Log'" @close="closeModal">
       <form class="grid gap-3 md:grid-cols-2" @submit.prevent="submitModal">
-        <input v-model="form.date" type="date" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
-        <input v-model.number="form.milkLiters" type="number" min="0" step="0.01" required placeholder="Milk (L)" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
-        <input v-model.number="form.eggsCount" type="number" min="0" step="1" required placeholder="Eggs" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
-        <input v-model.number="form.woolKg" type="number" min="0" step="0.01" required placeholder="Wool (kg)" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
-        <input v-model.number="form.totalValue" type="number" min="0" step="0.01" required placeholder="Total Value" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
-        <div class="md:col-span-2">
-          <p v-if="fieldErrors.length" class="mb-2 text-sm font-semibold text-farm-red">{{ fieldErrors.join(' ') }}</p>
-          <div class="flex items-center gap-3">
-            <button type="submit" class="rounded-lg bg-farm-green px-5 py-3 font-semibold text-white" :disabled="saving">{{ saving ? 'Saving...' : 'Save' }}</button>
-            <p v-if="error" class="font-semibold text-farm-red">{{ error }}</p>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Date</label>
+          <input v-model="form.date" type="date" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Milk (L)</label>
+          <input v-model.number="form.milkLiters" type="number" min="0" step="0.01" required placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Eggs</label>
+          <input v-model.number="form.eggsCount" type="number" min="0" step="1" required placeholder="0" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Wool (kg)</label>
+          <input v-model.number="form.woolKg" type="number" min="0" step="0.01" required placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Milk Rate (KSh/L)</label>
+          <input v-model.number="form.milkRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Egg Rate (KSh/egg)</label>
+          <input v-model.number="form.eggRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Wool Rate (KSh/kg)</label>
+          <input v-model.number="form.woolRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1 md:col-span-2">
+          <label class="inline-flex items-center gap-2 rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3 text-sm text-zinc-700">
+            <input v-model="form.manualTotalOverride" type="checkbox" />
+            Override total manually
+          </label>
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Total Value (KSh)</label>
+          <input v-model.number="form.totalValue" type="number" min="0" step="0.01" :required="form.manualTotalOverride" :disabled="!form.manualTotalOverride" placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3 disabled:opacity-60" />
+          <small v-if="!form.manualTotalOverride" class="text-xs text-[#7a7467]">Auto-calculated: {{ fmtCurrency(calculatedTotal) }}</small>
+        </div>
+        <div class="md:col-span-2 space-y-3">
+          <ul v-if="fieldErrors.length" class="rounded-lg border border-farm-red/30 bg-[#fff4f3] p-3">
+            <li v-for="issue in fieldErrors" :key="issue" class="ml-5 list-disc text-sm font-semibold text-farm-red">{{ issue }}</li>
+          </ul>
+          <p v-if="error" class="font-semibold text-farm-red">{{ error }}</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-5 py-3 font-semibold text-zinc-800" :disabled="saving" @click="closeModal">Cancel</button>
+            <button type="submit" class="rounded-lg bg-farm-green px-5 py-3 font-semibold text-white" :disabled="saving">
+              {{ saving ? 'Saving...' : (modalMode === 'create' ? 'Create Log' : 'Save Changes') }}
+            </button>
           </div>
         </div>
       </form>
@@ -126,7 +191,20 @@ const fieldErrors = ref([])
 const confirmOpen = ref(false)
 const pendingDelete = ref(null)
 
-const form = ref({ date: '', milkLiters: 0, eggsCount: 0, woolKg: 0, totalValue: 0 })
+const DEFAULT_MILK_RATE = 60
+const DEFAULT_EGG_RATE = 15
+const DEFAULT_WOOL_RATE = 500
+const form = ref({
+  date: '',
+  milkLiters: 0,
+  eggsCount: 0,
+  woolKg: 0,
+  milkRate: DEFAULT_MILK_RATE,
+  eggRate: DEFAULT_EGG_RATE,
+  woolRate: DEFAULT_WOOL_RATE,
+  manualTotalOverride: false,
+  totalValue: 0
+})
 
 const canCreate = computed(() => hasActionAccess(auth.role || auth.user?.role || '', 'production.create'))
 const canEdit = computed(() => hasActionAccess(auth.role || auth.user?.role || '', 'production.manage'))
@@ -139,7 +217,7 @@ const filteredRows = computed(() => {
 const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize.value)))
 
 const cardClass =
-  'rounded-lg p-5 shadow-[0_4px_0_rgba(0,0,0,0.12)] bg-[length:20px_20px] bg-[linear-gradient(135deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.04)_50%,rgba(255,255,255,0.04)_75%,transparent_75%,transparent)]'
+  'rounded-lg p-4 md:p-5 shadow-[0_4px_0_rgba(0,0,0,0.12)] overflow-hidden bg-[length:20px_20px] bg-[linear-gradient(135deg,rgba(255,255,255,0.04)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.04)_50%,rgba(255,255,255,0.04)_75%,transparent_75%,transparent)]'
 const toneClass = (tone) => ({
   green: 'bg-farm-green text-white',
   gold: 'bg-farm-gold text-zinc-800',
@@ -163,9 +241,28 @@ const weeklyMilk = computed(() => `${summary.value.weeklyMilk} L`)
 const weeklyEggs = computed(() => summary.value.weeklyEggs)
 const weeklyWool = computed(() => `${summary.value.weeklyWool} kg`)
 const weeklyValue = computed(() => fmtCurrency(summary.value.weeklyValue))
+const calculatedTotal = computed(() => {
+  const milk = Number(form.value.milkLiters || 0)
+  const eggs = Number(form.value.eggsCount || 0)
+  const wool = Number(form.value.woolKg || 0)
+  const milkRate = Number(form.value.milkRate || 0)
+  const eggRate = Number(form.value.eggRate || 0)
+  const woolRate = Number(form.value.woolRate || 0)
+  return milk * milkRate + eggs * eggRate + wool * woolRate
+})
 
 function resetForm() {
-  form.value = { date: '', milkLiters: 0, eggsCount: 0, woolKg: 0, totalValue: 0 }
+  form.value = {
+    date: '',
+    milkLiters: 0,
+    eggsCount: 0,
+    woolKg: 0,
+    milkRate: DEFAULT_MILK_RATE,
+    eggRate: DEFAULT_EGG_RATE,
+    woolRate: DEFAULT_WOOL_RATE,
+    manualTotalOverride: false,
+    totalValue: 0
+  }
   fieldErrors.value = []
 }
 
@@ -189,6 +286,10 @@ function openEditModal(row) {
     milkLiters: row.milkValue,
     eggsCount: row.eggsValue,
     woolKg: row.woolValue,
+    milkRate: DEFAULT_MILK_RATE,
+    eggRate: DEFAULT_EGG_RATE,
+    woolRate: DEFAULT_WOOL_RATE,
+    manualTotalOverride: false,
     totalValue: row.totalValue
   }
   modalOpen.value = true
@@ -204,9 +305,10 @@ function validateForm() {
   const issues = []
   if (!form.value.date) issues.push('Date is required.')
   if (form.value.milkLiters < 0) issues.push('Milk cannot be negative.')
-  if (form.value.eggsCount < 0) issues.push('Eggs cannot be negative.')
+  if (form.value.eggsCount < 0 || !Number.isInteger(Number(form.value.eggsCount))) issues.push('Eggs must be a whole number.')
   if (form.value.woolKg < 0) issues.push('Wool cannot be negative.')
-  if (form.value.totalValue < 0) issues.push('Total value cannot be negative.')
+  if (form.value.milkRate < 0 || form.value.eggRate < 0 || form.value.woolRate < 0) issues.push('Rates cannot be negative.')
+  if (form.value.manualTotalOverride && form.value.totalValue < 0) issues.push('Manual total cannot be negative.')
   fieldErrors.value = issues
   return issues.length === 0
 }
@@ -217,9 +319,17 @@ async function loadData(nextPage = page.value) {
     apiGet(`/api/production/logs?page=${nextPage}&pageSize=${pageSize.value}`)
   ])
   summary.value = sum
-  rows.value = Array.isArray(logsRes) ? logsRes : (logsRes.items || [])
-  totalCount.value = Number(logsRes.total || rows.value.length)
-  page.value = Number(logsRes.page || nextPage)
+  const list = Array.isArray(logsRes) ? logsRes : (logsRes.items || [])
+  const count = Number(logsRes.total || list.length)
+  const resolvedPage = Number(logsRes.page || nextPage)
+  const maxPage = Math.max(1, Math.ceil(count / pageSize.value))
+  if (resolvedPage > maxPage && resolvedPage !== 1) {
+    await loadData(maxPage)
+    return
+  }
+  rows.value = list
+  totalCount.value = count
+  page.value = resolvedPage
 }
 
 async function submitModal() {
@@ -229,10 +339,15 @@ async function submitModal() {
   error.value = ''
   saving.value = true
   try {
+    const payload = {
+      ...form.value,
+      eggsCount: Number(form.value.eggsCount || 0),
+      totalValue: form.value.manualTotalOverride ? Number(form.value.totalValue || 0) : Number(calculatedTotal.value || 0)
+    }
     if (modalMode.value === 'create') {
-      await apiPost('/api/production/logs', form.value)
+      await apiPost('/api/production/logs', payload)
     } else {
-      await apiPut(`/api/production/logs/${selectedId.value}`, form.value)
+      await apiPut(`/api/production/logs/${selectedId.value}`, payload)
     }
     await loadData()
     closeModal()

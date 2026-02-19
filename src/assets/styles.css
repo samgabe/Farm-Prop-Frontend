@@ -4,6 +4,6 @@
 
 @layer base {
   body {
-    @apply bg-farm-bg text-zinc-800 antialiased;
+    @apply bg-farm-bg text-[15px] text-zinc-800 antialiased;
   }
 }

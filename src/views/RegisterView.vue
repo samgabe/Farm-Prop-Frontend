@@ -22,14 +22,18 @@
       <label class="mt-2 font-bold">Password</label>
       <div class="relative">
         <Lock class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#847a67]" />
-        <input v-model="form.password" type="password" autocomplete="new-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
+        <input v-model="form.password" :type="showPasswords ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
       </div>
 
       <label class="mt-2 font-bold">Confirm Password</label>
       <div class="relative">
         <ShieldCheck class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#847a67]" />
-        <input v-model="form.confirmPassword" type="password" autocomplete="new-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
+        <input v-model="form.confirmPassword" :type="showPasswords ? 'text' : 'password'" autocomplete="new-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
       </div>
+      <label class="inline-flex items-center gap-2 text-sm text-[#7a7467]">
+        <input v-model="showPasswords" type="checkbox" class="h-4 w-4" />
+        Show passwords
+      </label>
 
       <button class="mt-2 rounded-lg bg-farm-green px-4 py-3 font-semibold text-white disabled:opacity-60" type="submit" :disabled="auth.loading">
         {{ auth.loading ? 'Creating...' : 'Create Account' }}
@@ -41,6 +45,7 @@
       </p>
 
       <p v-if="error" class="m-0 font-semibold text-farm-red">{{ error }}</p>
+      <p v-if="notice" class="m-0 font-semibold text-farm-green">{{ notice }}</p>
     </form>
   </section>
 </template>
@@ -54,6 +59,8 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const error = ref('')
+const notice = ref('')
+const showPasswords = ref(false)
 
 const form = reactive({
   name: '',
@@ -84,8 +91,9 @@ async function submit() {
   }
 
   try {
-    await auth.register({ name, email, password: form.password })
-    router.push('/')
+    const res = await auth.register({ name, email, password: form.password })
+    notice.value = res?.notice || 'Account created. Check your email for verification.'
+    setTimeout(() => router.push('/login?registered=1'), 900)
   } catch (err) {
     error.value = err.message || 'Registration failed'
   }

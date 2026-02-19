@@ -16,20 +16,27 @@
       <label class="mt-2 font-bold">Password</label>
       <div class="relative">
         <Lock class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#847a67]" />
-        <input v-model="form.password" type="password" autocomplete="current-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
+        <input v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" placeholder="••••••••" required minlength="6" class="w-full rounded-md border border-[#cdc6b7] bg-[#f1eee6] py-3 pl-11 pr-3" />
       </div>
       <small class="text-sm text-[#7a7467]">Minimum 6 characters</small>
+      <label class="inline-flex items-center gap-2 text-sm text-[#7a7467]">
+        <input v-model="showPassword" type="checkbox" class="h-4 w-4" />
+        Show password
+      </label>
 
       <button class="mt-2 rounded-lg bg-farm-green px-4 py-3 font-semibold text-white disabled:opacity-60" type="submit" :disabled="auth.loading">
         {{ auth.loading ? 'Signing In...' : 'Sign In' }}
       </button>
 
+      <p class="text-center text-sm">
+        <RouterLink to="/forgot-password" class="font-semibold text-farm-green">Forgot password?</RouterLink>
+      </p>
+
       <p class="text-center text-[#7a7467]">
         Don't have an account?
         <RouterLink to="/register" class="font-bold text-farm-green">Register here</RouterLink>
       </p>
-      <p class="text-center text-sm text-[#7a7467]">If your database is empty, create your first owner account via Register.</p>
-
+      <p v-if="notice" class="m-0 font-semibold text-farm-green">{{ notice }}</p>
       <p v-if="error" class="m-0 font-semibold text-farm-red">{{ error }}</p>
     </form>
   </section>
@@ -38,12 +45,15 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { Lock, Mail } from 'lucide-vue-next'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const error = ref('')
+const notice = ref(route.query.registered ? 'Account created. Verify your email before signing in.' : '')
+const showPassword = ref(false)
 
 const form = reactive({
   email: '',

@@ -6,8 +6,8 @@ export const ROLE_PERMISSIONS = {
 }
 
 export const ROLE_ACTIONS = {
-  owner: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'users.manage', 'reports.generate'],
-  manager: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'reports.generate'],
+  owner: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'users.manage', 'reports.generate', 'etims.manage'],
+  manager: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'reports.generate', 'etims.manage'],
   veterinarian: ['health.write'],
   worker: ['production.create']
 }

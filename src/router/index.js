@@ -11,6 +11,9 @@ import ReportsView from '../views/ReportsView.vue'
 import UsersView from '../views/UsersView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import VerifyEmailView from '../views/VerifyEmailView.vue'
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import ResetPasswordView from '../views/ResetPasswordView.vue'
 import { hasRouteAccess } from '../utils/rbac'
 
 const router = createRouter({
@@ -18,6 +21,9 @@ const router = createRouter({
   routes: [
     { path: '/login', component: LoginView, meta: { public: true } },
     { path: '/register', component: RegisterView, meta: { public: true } },
+    { path: '/verify-email', component: VerifyEmailView, meta: { public: true } },
+    { path: '/forgot-password', component: ForgotPasswordView, meta: { public: true } },
+    { path: '/reset-password', component: ResetPasswordView, meta: { public: true } },
     { path: '/', component: DashboardView, meta: { routeKey: 'dashboard' } },
     { path: '/animals', component: AnimalsView, meta: { routeKey: 'animals' } },
     { path: '/health', component: HealthView, meta: { routeKey: 'health' } },
