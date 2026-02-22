@@ -1,14 +1,14 @@
 export const ROLE_PERMISSIONS = {
-  owner: ['dashboard', 'animals', 'health', 'breeding', 'production', 'expenses', 'sales', 'reports', 'users'],
-  manager: ['dashboard', 'animals', 'health', 'breeding', 'production', 'expenses', 'sales', 'reports', 'users'],
-  veterinarian: ['dashboard', 'animals', 'health', 'reports'],
-  worker: ['dashboard', 'animals', 'production']
+  owner: ['dashboard', 'insights', 'animals', 'health', 'feeding', 'breeding', 'production', 'expenses', 'sales', 'reports', 'users'],
+  manager: ['dashboard', 'insights', 'animals', 'health', 'feeding', 'breeding', 'production', 'expenses', 'sales', 'reports', 'users'],
+  veterinarian: ['dashboard', 'insights', 'animals', 'health', 'feeding', 'reports'],
+  worker: ['dashboard', 'insights', 'animals', 'production', 'feeding']
 }
 
 export const ROLE_ACTIONS = {
-  owner: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'users.manage', 'reports.generate', 'etims.manage'],
-  manager: ['animals.write', 'health.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'reports.generate', 'etims.manage'],
-  veterinarian: ['health.write'],
+  owner: ['animals.write', 'health.write', 'feeding.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'users.manage', 'reports.generate', 'etims.manage'],
+  manager: ['animals.write', 'health.write', 'feeding.write', 'breeding.write', 'production.create', 'production.manage', 'expenses.write', 'sales.write', 'reports.generate', 'etims.manage'],
+  veterinarian: ['health.write', 'feeding.write'],
   worker: ['production.create']
 }
 

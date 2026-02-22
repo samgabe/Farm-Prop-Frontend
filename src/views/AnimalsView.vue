@@ -90,7 +90,14 @@
       <form class="grid gap-3 md:grid-cols-2" @submit.prevent="submitModal">
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Tag ID</label>
-          <input v-model.trim="form.tagId" :disabled="modalMode === 'edit'" required placeholder="A050" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3 disabled:bg-[#e9e4d9]" />
+          <input
+            v-model.trim="form.tagId"
+            :disabled="modalMode === 'edit'"
+            required
+            :placeholder="tagPlaceholder"
+            class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3 disabled:bg-[#e9e4d9]"
+          />
+          <p v-if="expectedPrefix" class="text-xs text-[#7a7467]">Expected prefix: {{ expectedPrefix }}</p>
         </div>
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Type</label>
@@ -143,13 +150,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import BaseModal from '../components/BaseModal.vue'
 import ConfirmModal from '../components/ConfirmModal.vue'
 import { apiDelete, apiGet, apiPost, apiPut } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import { animalIcon } from '../utils/icons'
 import { hasActionAccess } from '../utils/rbac'
+import { getTagPrefixForType } from '../utils/species'
 
 const auth = useAuthStore()
 const query = ref('')
@@ -177,6 +185,21 @@ const form = ref({
 const filtered = computed(() => animals.value)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const canWrite = computed(() => hasActionAccess(auth.role || auth.user?.role || '', 'animals.write'))
+const expectedPrefix = computed(() => getTagPrefixForType(form.value.type))
+const tagPlaceholder = computed(() => (expectedPrefix.value ? `${expectedPrefix.value}001` : 'A050'))
+
+watch(
+  () => form.value.type,
+  (next) => {
+    if (modalMode.value !== 'create') return
+    const prefix = getTagPrefixForType(next)
+    if (!prefix) return
+    const current = String(form.value.tagId || '').trim().toUpperCase()
+    if (!current || !current.startsWith(prefix)) {
+      form.value.tagId = prefix
+    }
+  }
+)
 
 async function loadAnimals(nextPage = page.value) {
   const res = await apiGet(`/api/animals?q=${encodeURIComponent(query.value || '')}&page=${nextPage}&pageSize=${pageSize.value}`)
@@ -245,6 +268,9 @@ function validateForm() {
   const today = new Date().toISOString().slice(0, 10)
   if (!tag) issues.push('Tag ID is required.')
   if (tag && !/^[A-Z0-9-]{2,24}$/.test(tag)) issues.push('Tag ID must be 2-24 chars (A-Z, 0-9, hyphen).')
+  if (expectedPrefix.value && !tag.startsWith(expectedPrefix.value)) {
+    issues.push(`Tag ID must start with ${expectedPrefix.value}.`)
+  }
   if (!String(form.value.type || '').trim()) issues.push('Type is required.')
   if (!String(form.value.breed || '').trim()) issues.push('Breed is required.')
   if (form.value.weightKg !== null && Number(form.value.weightKg) < 0) issues.push('Weight cannot be negative.')

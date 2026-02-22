@@ -10,7 +10,7 @@
       </button>
     </header>
 
-    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
       <article v-for="card in productionCards" :key="card.label" :class="[cardClass, toneClass(card.tone)]">
         <p class="text-sm font-semibold tracking-wide">{{ card.label }}</p>
         <h3 class="my-2 break-words text-2xl font-bold leading-tight md:text-3xl">{{ card.value }}</h3>
@@ -37,8 +37,10 @@
         </div>
         <div class="mt-2 grid gap-1 text-sm text-zinc-700">
           <p><span class="font-semibold">Milk:</span> {{ row.milk }}</p>
+          <p v-if="row.milkBreakdown" class="text-xs text-[#7a7467]">{{ row.milkBreakdown }}</p>
           <p><span class="font-semibold">Eggs:</span> {{ row.eggs }}</p>
           <p><span class="font-semibold">Wool:</span> {{ row.wool }}</p>
+          <p><span class="font-semibold">Meat:</span> {{ row.meat }}</p>
         </div>
         <div v-if="canEdit" class="mt-3 flex flex-wrap gap-2">
           <button class="rounded-md border border-[#cec7b8] px-3 py-1 text-sm" @click="openEditModal(row)">Edit</button>
@@ -51,26 +53,28 @@
     </div>
 
     <div class="hidden overflow-x-auto rounded-lg border border-[#ddd8ce] bg-farm-panel shadow-sm md:block">
-      <table class="min-w-[860px] w-full border-collapse">
+      <table class="min-w-[980px] w-full border-collapse">
         <thead class="bg-farm-green text-white">
           <tr>
             <th class="px-4 py-3 text-left text-sm">Date</th>
             <th class="px-4 py-3 text-left text-sm">Milk (L)</th>
             <th class="px-4 py-3 text-left text-sm">Eggs</th>
             <th class="px-4 py-3 text-left text-sm">Wool (kg)</th>
+            <th class="px-4 py-3 text-left text-sm">Meat (kg)</th>
             <th class="px-4 py-3 text-left text-sm">Total Value</th>
             <th v-if="canEdit" class="px-4 py-3 text-right text-sm">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="!filteredRows.length">
-            <td :colspan="canEdit ? 6 : 5" class="px-4 py-8 text-center text-[#7a7467]">No production logs available.</td>
+            <td :colspan="canEdit ? 7 : 6" class="px-4 py-8 text-center text-[#7a7467]">No production logs available.</td>
           </tr>
           <tr v-for="row in filteredRows" :key="row.id" class="border-t border-[#ddd8ce]">
             <td class="px-4 py-3 font-bold">{{ row.date }}</td>
             <td class="px-4 py-3">{{ row.milk }}</td>
             <td class="px-4 py-3">{{ row.eggs }}</td>
             <td class="px-4 py-3">{{ row.wool }}</td>
+            <td class="px-4 py-3">{{ row.meat }}</td>
             <td class="px-4 py-3 font-bold">{{ row.total }}</td>
             <td v-if="canEdit" class="px-4 py-3 text-right">
               <div class="inline-flex flex-wrap justify-end gap-2">
@@ -84,6 +88,7 @@
             <td class="px-4 py-3">{{ weeklyMilk }}</td>
             <td class="px-4 py-3">{{ weeklyEggs }}</td>
             <td class="px-4 py-3">{{ weeklyWool }}</td>
+            <td class="px-4 py-3">{{ weeklyMeat }}</td>
             <td class="px-4 py-3">{{ weeklyValue }}</td>
             <td v-if="canEdit" class="px-4 py-3"></td>
           </tr>
@@ -104,8 +109,12 @@
           <input v-model="form.date" type="date" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
         </div>
         <div class="grid gap-1">
-          <label class="text-sm font-semibold text-zinc-700">Milk (L)</label>
-          <input v-model.number="form.milkLiters" type="number" min="0" step="0.01" required placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+          <label class="text-sm font-semibold text-zinc-700">Milk (Cow, L)</label>
+          <input v-model.number="form.milkCowLiters" type="number" min="0" step="0.01" placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Milk (Goat, L)</label>
+          <input v-model.number="form.milkGoatLiters" type="number" min="0" step="0.01" placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
         </div>
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Eggs</label>
@@ -113,11 +122,19 @@
         </div>
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Wool (kg)</label>
-          <input v-model.number="form.woolKg" type="number" min="0" step="0.01" required placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+          <input v-model.number="form.woolKg" type="number" min="0" step="0.01" placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
         </div>
         <div class="grid gap-1">
-          <label class="text-sm font-semibold text-zinc-700">Milk Rate (KSh/L)</label>
-          <input v-model.number="form.milkRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+          <label class="text-sm font-semibold text-zinc-700">Meat (kg)</label>
+          <input v-model.number="form.meatKg" type="number" min="0" step="0.01" placeholder="0.00" class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Cow Milk Rate (KSh/L)</label>
+          <input v-model.number="form.milkCowRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Goat Milk Rate (KSh/L)</label>
+          <input v-model.number="form.milkGoatRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
         </div>
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Egg Rate (KSh/egg)</label>
@@ -126,6 +143,10 @@
         <div class="grid gap-1">
           <label class="text-sm font-semibold text-zinc-700">Wool Rate (KSh/kg)</label>
           <input v-model.number="form.woolRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
+        </div>
+        <div class="grid gap-1">
+          <label class="text-sm font-semibold text-zinc-700">Meat Rate (KSh/kg)</label>
+          <input v-model.number="form.meatRate" type="number" min="0" step="0.01" required class="rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3" />
         </div>
         <div class="grid gap-1 md:col-span-2">
           <label class="inline-flex items-center gap-2 rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3 text-sm text-zinc-700">
@@ -174,7 +195,17 @@ import { fmtCurrency } from '../utils/animal'
 import { hasActionAccess } from '../utils/rbac'
 
 const auth = useAuthStore()
-const summary = ref({ weeklyMilk: 0, weeklyEggs: 0, weeklyWool: 0, weeklyValue: 0, productivityChange: 0 })
+const summary = ref({
+  weeklyMilk: 0,
+  weeklyMilkTotal: 0,
+  weeklyMilkCow: 0,
+  weeklyMilkGoat: 0,
+  weeklyEggs: 0,
+  weeklyWool: 0,
+  weeklyMeat: 0,
+  weeklyValue: 0,
+  productivityChange: 0
+})
 const rows = ref([])
 const query = ref('')
 const page = ref(1)
@@ -192,16 +223,25 @@ const confirmOpen = ref(false)
 const pendingDelete = ref(null)
 
 const DEFAULT_MILK_RATE = 60
+const DEFAULT_MILK_COW_RATE = 60
+const DEFAULT_MILK_GOAT_RATE = 80
 const DEFAULT_EGG_RATE = 15
 const DEFAULT_WOOL_RATE = 500
+const DEFAULT_MEAT_RATE = 450
 const form = ref({
   date: '',
   milkLiters: 0,
+  milkCowLiters: 0,
+  milkGoatLiters: 0,
   eggsCount: 0,
   woolKg: 0,
+  meatKg: 0,
   milkRate: DEFAULT_MILK_RATE,
+  milkCowRate: DEFAULT_MILK_COW_RATE,
+  milkGoatRate: DEFAULT_MILK_GOAT_RATE,
   eggRate: DEFAULT_EGG_RATE,
   woolRate: DEFAULT_WOOL_RATE,
+  meatRate: DEFAULT_MEAT_RATE,
   manualTotalOverride: false,
   totalValue: 0
 })
@@ -226,9 +266,10 @@ const toneClass = (tone) => ({
 }[tone] || 'bg-farm-green text-white')
 
 const productionCards = computed(() => [
-  { label: 'Weekly Milk', value: `${summary.value.weeklyMilk}L`, note: 'Last 7 days', tone: 'green' },
+  { label: 'Weekly Milk', value: `${Number(summary.value.weeklyMilkTotal ?? summary.value.weeklyMilk)}L`, note: 'Last 7 days', tone: 'green' },
   { label: 'Weekly Eggs', value: summary.value.weeklyEggs, note: 'Last 7 days', tone: 'gold' },
   { label: 'Weekly Wool', value: `${summary.value.weeklyWool} kg`, note: 'Last 7 days', tone: 'orange' },
+  { label: 'Weekly Meat', value: `${summary.value.weeklyMeat} kg`, note: 'Last 7 days', tone: 'gold' },
   {
     label: 'Productivity',
     value: `${summary.value.productivityChange >= 0 ? '+' : ''}${Number(summary.value.productivityChange || 0).toFixed(1)}%`,
@@ -237,29 +278,49 @@ const productionCards = computed(() => [
   }
 ])
 
-const weeklyMilk = computed(() => `${summary.value.weeklyMilk} L`)
+const weeklyMilk = computed(() => `${Number(summary.value.weeklyMilkTotal ?? summary.value.weeklyMilk)} L`)
 const weeklyEggs = computed(() => summary.value.weeklyEggs)
 const weeklyWool = computed(() => `${summary.value.weeklyWool} kg`)
+const weeklyMeat = computed(() => `${summary.value.weeklyMeat} kg`)
 const weeklyValue = computed(() => fmtCurrency(summary.value.weeklyValue))
 const calculatedTotal = computed(() => {
-  const milk = Number(form.value.milkLiters || 0)
+  const milkVarietyTotal =
+    Number(form.value.milkCowLiters || 0) +
+    Number(form.value.milkGoatLiters || 0)
+  const milkLiters = Number(form.value.milkLiters || 0)
   const eggs = Number(form.value.eggsCount || 0)
   const wool = Number(form.value.woolKg || 0)
+  const meat = Number(form.value.meatKg || 0)
   const milkRate = Number(form.value.milkRate || 0)
+  const milkCowRate = Number(form.value.milkCowRate || 0)
+  const milkGoatRate = Number(form.value.milkGoatRate || 0)
   const eggRate = Number(form.value.eggRate || 0)
   const woolRate = Number(form.value.woolRate || 0)
-  return milk * milkRate + eggs * eggRate + wool * woolRate
+  const meatRate = Number(form.value.meatRate || 0)
+  if (milkVarietyTotal === 0 && milkLiters > 0) {
+    return milkLiters * milkRate + eggs * eggRate + wool * woolRate + meat * meatRate
+  }
+  const milkTotal =
+    Number(form.value.milkCowLiters || 0) * milkCowRate +
+    Number(form.value.milkGoatLiters || 0) * milkGoatRate
+  return milkTotal + eggs * eggRate + wool * woolRate + meat * meatRate
 })
 
 function resetForm() {
   form.value = {
     date: '',
     milkLiters: 0,
+    milkCowLiters: 0,
+    milkGoatLiters: 0,
     eggsCount: 0,
     woolKg: 0,
+    meatKg: 0,
     milkRate: DEFAULT_MILK_RATE,
+    milkCowRate: DEFAULT_MILK_COW_RATE,
+    milkGoatRate: DEFAULT_MILK_GOAT_RATE,
     eggRate: DEFAULT_EGG_RATE,
     woolRate: DEFAULT_WOOL_RATE,
+    meatRate: DEFAULT_MEAT_RATE,
     manualTotalOverride: false,
     totalValue: 0
   }
@@ -284,11 +345,17 @@ function openEditModal(row) {
   form.value = {
     date: row.dateRaw,
     milkLiters: row.milkValue,
+    milkCowLiters: row.milkCowValue || 0,
+    milkGoatLiters: row.milkGoatValue || 0,
     eggsCount: row.eggsValue,
     woolKg: row.woolValue,
+    meatKg: row.meatValue || 0,
     milkRate: DEFAULT_MILK_RATE,
+    milkCowRate: DEFAULT_MILK_COW_RATE,
+    milkGoatRate: DEFAULT_MILK_GOAT_RATE,
     eggRate: DEFAULT_EGG_RATE,
     woolRate: DEFAULT_WOOL_RATE,
+    meatRate: DEFAULT_MEAT_RATE,
     manualTotalOverride: false,
     totalValue: row.totalValue
   }
@@ -304,10 +371,21 @@ function closeModal() {
 function validateForm() {
   const issues = []
   if (!form.value.date) issues.push('Date is required.')
-  if (form.value.milkLiters < 0) issues.push('Milk cannot be negative.')
+  if (form.value.milkCowLiters < 0) issues.push('Cow milk cannot be negative.')
+  if (form.value.milkGoatLiters < 0) issues.push('Goat milk cannot be negative.')
   if (form.value.eggsCount < 0 || !Number.isInteger(Number(form.value.eggsCount))) issues.push('Eggs must be a whole number.')
   if (form.value.woolKg < 0) issues.push('Wool cannot be negative.')
-  if (form.value.milkRate < 0 || form.value.eggRate < 0 || form.value.woolRate < 0) issues.push('Rates cannot be negative.')
+  if (form.value.meatKg < 0) issues.push('Meat cannot be negative.')
+  if (
+    form.value.milkRate < 0 ||
+    form.value.milkCowRate < 0 ||
+    form.value.milkGoatRate < 0 ||
+    form.value.eggRate < 0 ||
+    form.value.woolRate < 0 ||
+    form.value.meatRate < 0
+  ) {
+    issues.push('Rates cannot be negative.')
+  }
   if (form.value.manualTotalOverride && form.value.totalValue < 0) issues.push('Manual total cannot be negative.')
   fieldErrors.value = issues
   return issues.length === 0
@@ -327,7 +405,15 @@ async function loadData(nextPage = page.value) {
     await loadData(maxPage)
     return
   }
-  rows.value = list
+  rows.value = list.map((row) => {
+    const parts = []
+    if (Number(row.milkCowValue || 0) > 0) parts.push(`Cow ${row.milkCow}`)
+    if (Number(row.milkGoatValue || 0) > 0) parts.push(`Goat ${row.milkGoat}`)
+    return {
+      ...row,
+      milkBreakdown: parts.join(' · ')
+    }
+  })
   totalCount.value = count
   page.value = resolvedPage
 }
@@ -341,6 +427,10 @@ async function submitModal() {
   try {
     const payload = {
       ...form.value,
+      milkLiters:
+        Number(form.value.milkCowLiters || 0) +
+        Number(form.value.milkGoatLiters || 0) ||
+        Number(form.value.milkLiters || 0),
       eggsCount: Number(form.value.eggsCount || 0),
       totalValue: form.value.manualTotalOverride ? Number(form.value.totalValue || 0) : Number(calculatedTotal.value || 0)
     }

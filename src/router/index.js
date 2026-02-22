@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import DashboardView from '../views/DashboardView.vue'
+import InsightsView from '../views/InsightsView.vue'
 import AnimalsView from '../views/AnimalsView.vue'
 import HealthView from '../views/HealthView.vue'
 import BreedingView from '../views/BreedingView.vue'
 import ProductionView from '../views/ProductionView.vue'
+import FeedingView from '../views/FeedingView.vue'
 import ExpensesView from '../views/ExpensesView.vue'
 import SalesView from '../views/SalesView.vue'
 import ReportsView from '../views/ReportsView.vue'
@@ -25,10 +27,12 @@ const router = createRouter({
     { path: '/forgot-password', component: ForgotPasswordView, meta: { public: true } },
     { path: '/reset-password', component: ResetPasswordView, meta: { public: true } },
     { path: '/', component: DashboardView, meta: { routeKey: 'dashboard' } },
+    { path: '/insights', component: InsightsView, meta: { routeKey: 'insights' } },
     { path: '/animals', component: AnimalsView, meta: { routeKey: 'animals' } },
     { path: '/health', component: HealthView, meta: { routeKey: 'health' } },
     { path: '/breeding', component: BreedingView, meta: { routeKey: 'breeding' } },
     { path: '/production', component: ProductionView, meta: { routeKey: 'production' } },
+    { path: '/feeding', component: FeedingView, meta: { routeKey: 'feeding' } },
     { path: '/expenses', component: ExpensesView, meta: { routeKey: 'expenses' } },
     { path: '/sales', component: SalesView, meta: { routeKey: 'sales' } },
     { path: '/reports', component: ReportsView, meta: { routeKey: 'reports' } },

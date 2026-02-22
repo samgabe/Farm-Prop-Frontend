@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  TrendingUp,
   CircleDot,
   HeartPulse,
   Sprout,
@@ -18,10 +19,12 @@ import {
 
 export const navIconMap = {
   grid: BarChart3,
+  trend: TrendingUp,
   circle: CircleDot,
   heart: HeartPulse,
   sprout: Sprout,
   bottle: Milk,
+  feed: PawPrint,
   wallet: Wallet,
   dollar: DollarSign,
   report: FileText,

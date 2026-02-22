@@ -55,6 +55,8 @@
           <select v-model="builder.reportType" class="w-full rounded-lg border border-[#cec7b8] bg-[#f5f2eb] px-3 py-3">
             <option>Financial</option>
             <option>Health</option>
+            <option>Breeding</option>
+            <option>Feeding</option>
             <option>Resources</option>
             <option>Sales</option>
           </select>
